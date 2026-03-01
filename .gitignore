@@ -7,3 +7,4 @@ outputs/*.txt
 data/jobpilot.db
 PRD.md
 data/resume.json
+*.log
