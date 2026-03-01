@@ -1,0 +1,9 @@
+__pycache__/
+.pytest_cache/
+.venv/
+.env
+outputs/*.pdf
+outputs/*.txt
+data/jobpilot.db
+PRD.md
+data/resume.json

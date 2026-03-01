@@ -1,0 +1,81 @@
+# JobPilot AI
+
+Local-first MVP for AI-powered job discovery, analysis, resume tailoring, PDF generation, cover letter generation, and SQLite application tracking.
+
+## Setup
+
+1. Create and activate venv.
+2. Install dependencies with `uv`:
+
+```bash
+uv sync
+```
+
+3. Configure env vars:
+
+```bash
+cp .env.example .env
+```
+
+4. Provide base resume JSON at `data/resume.json` (template included).
+
+## Run
+
+```bash
+streamlit run app.py
+```
+
+If `data/resume.json` is missing, the UI will prompt you to upload a resume and generate canonical `resume.json` via LLM.
+
+## Architecture
+
+- `src/jobpilot/scrapers/*`: Greenhouse/Lever/Workable/Arbeitnow/Remotive discovery
+- `src/jobpilot/llm/*`: LiteLLM abstraction, prompts, schema-enforced output
+- `src/jobpilot/services/graphs.py`: LangGraph orchestration for analyze/generate/track flows
+- `src/jobpilot/resume/*`: canonical resume loading + anti-fabrication tailoring checks
+- `src/jobpilot/pdf/generator.py`: reportlab ATS-friendly PDF
+- `src/jobpilot/cover_letter/generator.py`: 6-8 line targeted cover letter generation
+- `src/jobpilot/db/*`: SQLite schema and repository
+- `src/jobpilot/services/pipeline.py`: orchestration for analysis/generation/tracking
+- `app.py`: Streamlit UI with 3 tabs (Search, Resume Preview, Tracker)
+  - includes job selection before analysis and backend activity/progress widgets
+
+## Provider Switching
+
+Set only environment config:
+- `LITELLM_MODEL`
+- `LITELLM_API_BASE`
+- relevant provider API key env var
+
+No feature module code changes are required for provider swap.
+
+### Default Model (AWS Bedrock)
+
+The default model is set to:
+
+`bedrock/anthropic.claude-3-haiku-20240307-v1:0`
+
+Required env vars for Bedrock:
+- `AWS_REGION_NAME`
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN` (if using temporary credentials)
+
+If you see `No module named 'botocore'`, re-sync dependencies:
+
+```bash
+uv sync
+```
+
+## Validation Rules
+
+- All LLM outputs are parsed as strict JSON into Pydantic models.
+- Resume tailoring rejects hallucinated experience entries and new bullets.
+- Analyze must succeed before resume/cover-letter generation is enabled.
+
+## Known Limitations (MVP)
+
+- Job source lists are seeded in `app.py` and should be customized.
+- Workable endpoint support depends on company board availability.
+- Remotive and Arbeitnow availability depends on their public API uptime/coverage.
+- Match quality depends on model and prompt alignment.
